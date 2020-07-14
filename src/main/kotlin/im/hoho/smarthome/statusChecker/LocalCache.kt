@@ -13,7 +13,7 @@ import java.io.File
 
 @Service
 class LocalCache {
-    val logger: Logger = LogManager.getLogger(StatusCheckerApplication::class.java)
+    val logger: Logger = LogManager.getLogger(LocalCache::class.java)
 
     private val cache: MutableList<EnvCacheItem> = mutableListOf()
     private val cacheMap: MutableMap<String, EnvCacheItem> = mutableMapOf()
@@ -29,7 +29,9 @@ class LocalCache {
                 skipFirstLine = false
                 return@fileloading
             }
-            cache.add(convertToItem(it))
+            val item = convertToItem(it)
+            if (item.enabled)
+                cache.add(item)
         }
         logger.info("loaded ${cache.size} items into local cache.")
     }
