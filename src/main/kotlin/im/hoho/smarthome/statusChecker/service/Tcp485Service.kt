@@ -40,7 +40,7 @@ class Tcp485Service(val ip: String, val port: Int) {
         sendMessage(finalBytes)
     }
 
-    fun convertStringToHexToBytes(content: String): ByteArray {
+    private fun convertStringToHexToBytes(content: String): ByteArray {
         return content.chunked(2).map {
             ((Character.digit(it[0], 16) shl 4)
                     + Character.digit(it[1], 16)).toByte()
@@ -53,21 +53,33 @@ class Tcp485Service(val ip: String, val port: Int) {
     }
 
     private fun monitorSocket() {
+        var btnStatus = true
         while (true) {
-            Thread.sleep(5000)
+            Thread.sleep(500)
+            btnStatus = !btnStatus
+            try {
+                sendButtonStatus(300, btnStatus)
+            } catch (_: Exception) {
+
+            }
             if (!socketClient.isConnected) {
                 logger.warn("Reconnecting...")
                 connectTo485()
+                Thread.sleep(5000)
             }
         }
     }
 
-    fun sendMessage(bytes: ByteArray): Boolean {
-        if (socketClient.isConnected) {
-            val outputStream = DataOutputStream(socketClient.getOutputStream())
-            outputStream.write(bytes)
-            outputStream.flush()
-            return true
+    private fun sendMessage(bytes: ByteArray): Boolean {
+        try {
+            if (socketClient.isConnected) {
+                val outputStream = DataOutputStream(socketClient.getOutputStream())
+                outputStream.write(bytes)
+                outputStream.flush()
+                return true
+            }
+        } catch (e: Exception) {
+            logger.error("error occured when sending message...", e.message)
         }
         return false
     }

@@ -11,7 +11,7 @@ class PingService(tcp485Service: Tcp485Service, type: CheckType, cacheItem: List
     override fun startup() {
         logger.info("Starting Ping Service..")
         while (true) {
-            Thread.sleep(15000)
+            Thread.sleep(10000)
             cacheItem.forEach {
                 try {
                     logger.debug("ping dest ${it.ip}..")
