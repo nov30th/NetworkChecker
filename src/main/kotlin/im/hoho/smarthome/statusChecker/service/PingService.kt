@@ -5,13 +5,13 @@ import im.hoho.smarthome.statusChecker.model.EnvCacheItem
 import java.net.InetAddress
 import java.util.*
 
-class PingService(type: CheckType, cacheItem: List<EnvCacheItem>) :
-        StatusAbstract(type, cacheItem) {
+class PingService(tcp485Service: Tcp485Service, type: CheckType, cacheItem: List<EnvCacheItem>) :
+        StatusAbstract(tcp485Service, type, cacheItem) {
 
     override fun startup() {
         logger.info("Starting Ping Service..")
         while (true) {
-            Thread.sleep(5000)
+            Thread.sleep(15000)
             cacheItem.forEach {
                 try {
                     logger.debug("ping dest ${it.ip}..")
@@ -34,6 +34,7 @@ class PingService(type: CheckType, cacheItem: List<EnvCacheItem>) :
                     it.status = 0
                 }
                 it.lastUpdate = Date().time
+                tcp485Service.sendButtonStatus(it.lcdButton, it.status == 1)
             }
         }
     }

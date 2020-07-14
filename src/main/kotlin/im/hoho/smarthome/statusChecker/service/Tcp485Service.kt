@@ -55,12 +55,14 @@ class Tcp485Service(val ip: String, val port: Int) {
     private fun monitorSocket() {
         while (true) {
             Thread.sleep(5000)
-            if (!socketClient.isConnected)
+            if (!socketClient.isConnected) {
+                logger.warn("Reconnecting...")
                 connectTo485()
+            }
         }
     }
 
-    private fun sendMessage(bytes: ByteArray): Boolean {
+    fun sendMessage(bytes: ByteArray): Boolean {
         if (socketClient.isConnected) {
             val outputStream = DataOutputStream(socketClient.getOutputStream())
             outputStream.write(bytes)
@@ -74,6 +76,7 @@ class Tcp485Service(val ip: String, val port: Int) {
         try {
             val address = InetSocketAddress(ip, port)
             socketClient.connect(address, 5000)
+            logger.info("Connected with $ip:$port")
         } catch (e: UnknownHostException) {
             logger.error("connecting 485 error during [${ip}]/${port} with UnknownHostException ${e.message}")
         } catch (e: IOException) {

@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger
 import java.net.InetAddress
 
 
-abstract class StatusAbstract(val type: CheckType, val cacheItem: List<EnvCacheItem>) : IStatus {
+abstract class StatusAbstract(val tcp485Service: Tcp485Service, val type: CheckType, val cacheItem: List<EnvCacheItem>) : IStatus {
 //    lateinit var type: CheckType
 //    lateinit var cache: List<EnvCacheItem>
 //    lateinit var callback: (name: String, result: String, status: Int) -> Int

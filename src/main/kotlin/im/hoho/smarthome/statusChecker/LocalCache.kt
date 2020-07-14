@@ -70,6 +70,8 @@ class LocalCache {
             1 -> true
             else -> false
         }
+        item.lcdText = params[10].toInt()
+        item.lcdButton = params[11].toInt()
         logger.info("Converting ${mapper.writeValueAsString(item)}")
         cacheMap.put(item.name, item)
         return item

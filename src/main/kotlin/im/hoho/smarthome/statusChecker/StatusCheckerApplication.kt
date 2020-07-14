@@ -40,16 +40,22 @@ class StatusCheckerApplication {
             run {
                 logger.info("*********** Https://hoho.im **************");
                 logger.info("Starting...");
-                localCache.readLocalCsv("test.csv")
+                localCache.readLocalCsv("/home/pi/networkStatus.csv")
 //                localCache.readLocalCsv("src/main/resources/test.csv")
-                pingService = PingService(CheckType.PING, localCache.getCache().filter { it.checkType == CheckType.PING })
-                telnetService = TelnetService(CheckType.TELNET, localCache.getCache().filter { it.checkType == CheckType.TELNET })
-                tcp485Service = Tcp485Service("192.168.123.216",8889)
+                tcp485Service = Tcp485Service("192.168.123.216",8899)
                 tcp485Service.startup()
+                pingService = PingService(tcp485Service,CheckType.PING, localCache.getCache().filter { it.checkType == CheckType.PING })
+                telnetService = TelnetService(tcp485Service,CheckType.TELNET, localCache.getCache().filter { it.checkType == CheckType.TELNET })
 
 
-                tcp485Service.sendButtonStatus(201,true)
-                tcp485Service.sendText(101,"FF127599")
+//                val testingContent = "EE B1 10 00 0B 00 01 48 41 48 41 48 41 FF FC FF FF "
+//                        .replace(" ","")
+//                val testingBytes = tcp485Service.convertStringToHexToBytes(testingContent)
+//                tcp485Service.sendMessage(testingBytes)
+//                tcp485Service.sendButtonStatus(201,true)
+//                tcp485Service.sendButtonStatus(204,true)
+//                tcp485Service.sendButtonStatus(207,true)
+//                tcp485Service.sendText(101,"FF127599")
 
                 thread { pingService.startup() }
                 thread { telnetService.startup() }

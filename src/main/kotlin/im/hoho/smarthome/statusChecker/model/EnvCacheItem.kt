@@ -13,6 +13,8 @@ class EnvCacheItem {
     var networkNum = 0
     var checkInv = 0
     var limitValue = 100
+    var lcdText = 0
+    var lcdButton = 0
 
     var status = -1
     var lastUpdate = Date().time
