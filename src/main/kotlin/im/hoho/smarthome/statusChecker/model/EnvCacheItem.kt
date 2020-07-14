@@ -1,5 +1,7 @@
 package im.hoho.smarthome.statusChecker.model
 
+import java.util.*
+
 class EnvCacheItem {
     var enabled = false
     var category = Category.IP
@@ -11,4 +13,9 @@ class EnvCacheItem {
     var networkNum = 0
     var checkInv = 0
     var limitValue = 100
+
+    var status = -1
+    var lastUpdate = Date().time
+    var statusMessage = ""
+    var statusValue = ""
 }

@@ -16,6 +16,7 @@ class LocalCache {
     val logger: Logger = LogManager.getLogger(StatusCheckerApplication::class.java)
 
     private val cache: MutableList<EnvCacheItem> = mutableListOf()
+    private val cacheMap: MutableMap<String, EnvCacheItem> = mutableMapOf()
 
     @Autowired
     lateinit var mapper: ObjectMapper
@@ -35,6 +36,10 @@ class LocalCache {
 
     fun getCache(): List<EnvCacheItem> {
         return cache.toList()
+    }
+
+    fun getCacheMap(): Map<String, EnvCacheItem> {
+        return cacheMap.toMap()
     }
 
     private fun convertToItem(param: String): EnvCacheItem {
@@ -64,7 +69,7 @@ class LocalCache {
             else -> false
         }
         logger.info("Converting ${mapper.writeValueAsString(item)}")
+        cacheMap.put(item.name, item)
         return item
     }
-
 }
