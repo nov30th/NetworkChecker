@@ -56,16 +56,16 @@ class Tcp485Service(val ip: String, val port: Int) {
         var btnStatus = true
         while (true) {
             Thread.sleep(500)
-            btnStatus = !btnStatus
             try {
+                btnStatus = !btnStatus
+                if (!socketClient.isConnected) {
+                    Thread.sleep(5000)
+                    logger.warn("Reconnecting...")
+                    connectTo485()
+                }
                 sendButtonStatus(300, btnStatus)
             } catch (_: Exception) {
 
-            }
-            if (!socketClient.isConnected) {
-                logger.warn("Reconnecting...")
-                connectTo485()
-                Thread.sleep(5000)
             }
         }
     }
