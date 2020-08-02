@@ -10,8 +10,8 @@ import java.net.UnknownHostException
 import java.util.*
 
 
-class TelnetService(tcp485Service: Tcp485Service, type: CheckType, cacheItem: List<EnvCacheItem>) :
-        StatusAbstract(tcp485Service, type, cacheItem) {
+class TelnetService(iSend: ISend, type: CheckType, cacheItem: List<EnvCacheItem>) :
+        StatusAbstract(iSend, type, cacheItem) {
 
 
     override fun startup() {
@@ -38,7 +38,7 @@ class TelnetService(tcp485Service: Tcp485Service, type: CheckType, cacheItem: Li
                     it.status = 0
                 }
                 it.lastUpdate = Date().time
-                tcp485Service.sendButtonStatus(it.lcdButton, it.status == 1)
+                iSend.sendButtonStatus(it.lcdButton, it.status == 1)
             }
         }
     }

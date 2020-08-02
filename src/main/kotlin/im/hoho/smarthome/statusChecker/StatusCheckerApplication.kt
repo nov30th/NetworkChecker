@@ -4,6 +4,7 @@ import im.hoho.smarthome.statusChecker.model.CheckType
 import im.hoho.smarthome.statusChecker.service.PingService
 import im.hoho.smarthome.statusChecker.service.Tcp485Service
 import im.hoho.smarthome.statusChecker.service.TelnetService
+import im.hoho.smarthome.statusChecker.service.Udp485Service
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,7 +25,6 @@ class StatusCheckerApplication {
 
     lateinit var pingService: PingService
     lateinit var telnetService: TelnetService
-    lateinit var tcp485Service: Tcp485Service
 
 
     companion object {
@@ -42,10 +42,11 @@ class StatusCheckerApplication {
                 logger.info("Starting...");
                 localCache.readLocalCsv("/home/pi/networkStatus.csv")
 //                localCache.readLocalCsv("src/main/resources/test.csv")
-                tcp485Service = Tcp485Service("192.168.123.216",8899)
-                tcp485Service.startup()
-                pingService = PingService(tcp485Service,CheckType.PING, localCache.getCache().filter { it.checkType == CheckType.PING })
-                telnetService = TelnetService(tcp485Service,CheckType.TELNET, localCache.getCache().filter { it.checkType == CheckType.TELNET })
+//                tcp485Service = Tcp485Service("192.168.123.216",8899)
+                val udp485Service = Udp485Service("192.168.123.216",9999)
+                udp485Service.startup()
+                pingService = PingService(udp485Service,CheckType.PING, localCache.getCache().filter { it.checkType == CheckType.PING })
+                telnetService = TelnetService(udp485Service,CheckType.TELNET, localCache.getCache().filter { it.checkType == CheckType.TELNET })
 
 
 //                val testingContent = "EE B1 10 00 0B 00 01 48 41 48 41 48 41 FF FC FF FF "
