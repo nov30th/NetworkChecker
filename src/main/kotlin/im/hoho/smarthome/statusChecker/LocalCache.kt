@@ -64,14 +64,14 @@ class LocalCache {
             else -> Category.IP
         }
         item.networkNum = params[6].toInt()
-        item.checkInv = params[7].toInt()
-        item.limitValue = params[8].toInt()
-        item.enabled = when (params[9].toInt()) {
+//        item.checkInv = params[7].toInt()
+        item.limitValue = params[7].toInt()
+        item.enabled = when (params[8].toInt()) {
             1 -> true
             else -> false
         }
-        item.lcdText = params[10].toInt()
-        item.lcdButton = params[11].toInt()
+        item.lcdText = params[9].toInt()
+        item.lcdButton = params[10].toInt()
         logger.info("Converting ${mapper.writeValueAsString(item)}")
         cacheMap.put(item.name, item)
         return item

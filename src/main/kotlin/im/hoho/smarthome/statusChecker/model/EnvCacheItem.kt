@@ -11,7 +11,7 @@ class EnvCacheItem {
     var port = 0
     var checkType = CheckType.PING
     var networkNum = 0
-    var checkInv = 0
+//    var checkInv = 0
     var limitValue = 100
     var lcdText = 0
     var lcdButton = 0

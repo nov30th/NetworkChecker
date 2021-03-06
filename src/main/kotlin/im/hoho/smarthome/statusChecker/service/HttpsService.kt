@@ -37,7 +37,7 @@ class HttpsService(iSend: ISend, type: CheckType, cacheItem: List<EnvCacheItem>)
                     (URL(urlPath).openConnection() as HttpsURLConnection).apply {
                         sslSocketFactory = createSocketFactory(listOf("TLSv1.2"))
                         hostnameVerifier = HostnameVerifier { _, _ -> true }
-                        readTimeout = 5_000
+                        readTimeout = it.limitValue
                         connect()
                         responseCode = getResponseCode()
                     }
@@ -57,6 +57,11 @@ class HttpsService(iSend: ISend, type: CheckType, cacheItem: List<EnvCacheItem>)
                     it.status = 0
                 } catch (e: IOException) {
                     logger.warn("https error during [${it.ip}] of ${it.name} with IOException ${e.message}")
+                    it.statusMessage = e.message.toString()
+                    it.status = 0
+                }
+                catch (e: Exception) {
+                    logger.warn("https unknown error during [${it.ip}] of ${it.name} with ${e.message}")
                     it.statusMessage = e.message.toString()
                     it.status = 0
                 }
