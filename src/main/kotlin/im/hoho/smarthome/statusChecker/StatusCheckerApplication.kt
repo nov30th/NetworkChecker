@@ -40,7 +40,7 @@ class StatusCheckerApplication {
             run {
                 logger.info("*********** Https://hoho.im **************");
                 logger.info("Starting...");
-                localCache.readLocalCsv("/home/pi/networkStatus.csv")
+                localCache.readLocalCsv("networkStatus.csv")
 //                localCache.readLocalCsv("src/main/resources/test.csv")
 //                tcp485Service = Tcp485Service("192.168.123.216",8899)
                 val udp485Service = Udp485Service("192.168.123.216",9999)
