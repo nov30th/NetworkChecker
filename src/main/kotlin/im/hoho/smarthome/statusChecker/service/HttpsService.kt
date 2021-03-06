@@ -25,7 +25,7 @@ class HttpsService(iSend: ISend, type: CheckType, cacheItem: List<EnvCacheItem>)
             }.socketFactory
 
     override fun startup() {
-        logger.info("Starting Telnet Service..")
+        logger.info("Starting HTTPS Service..")
         while (true) {
             Thread.sleep(30000)
             cacheItem.forEach {
