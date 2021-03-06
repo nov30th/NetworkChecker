@@ -1,8 +1,8 @@
 package im.hoho.smarthome.statusChecker
 
 import im.hoho.smarthome.statusChecker.model.CheckType
+import im.hoho.smarthome.statusChecker.service.HttpsService
 import im.hoho.smarthome.statusChecker.service.PingService
-import im.hoho.smarthome.statusChecker.service.Tcp485Service
 import im.hoho.smarthome.statusChecker.service.TelnetService
 import im.hoho.smarthome.statusChecker.service.Udp485Service
 import org.apache.logging.log4j.LogManager
@@ -25,6 +25,7 @@ class StatusCheckerApplication {
 
     lateinit var pingService: PingService
     lateinit var telnetService: TelnetService
+    lateinit var httpsService: HttpsService
 
 
     companion object {
@@ -36,17 +37,18 @@ class StatusCheckerApplication {
 
     @Bean
     open fun commandLineRunner(ctx: ApplicationContext): CommandLineRunner {
-        return CommandLineRunner { args ->
+        return CommandLineRunner { _ ->
             run {
                 logger.info("*********** Https://hoho.im **************");
                 logger.info("Starting...");
                 localCache.readLocalCsv("networkStatus.csv")
 //                localCache.readLocalCsv("src/main/resources/test.csv")
 //                tcp485Service = Tcp485Service("192.168.123.216",8899)
-                val udp485Service = Udp485Service("192.168.123.216",9999)
+                val udp485Service = Udp485Service("192.168.123.216", 9999)
                 udp485Service.startup()
-                pingService = PingService(udp485Service,CheckType.PING, localCache.getCache().filter { it.checkType == CheckType.PING })
-                telnetService = TelnetService(udp485Service,CheckType.TELNET, localCache.getCache().filter { it.checkType == CheckType.TELNET })
+                pingService = PingService(udp485Service, CheckType.PING, localCache.getCache().filter { it.checkType == CheckType.PING })
+                telnetService = TelnetService(udp485Service, CheckType.TELNET, localCache.getCache().filter { it.checkType == CheckType.TELNET })
+                httpsService = HttpsService(udp485Service, CheckType.HTTPS, localCache.getCache().filter { it.checkType == CheckType.HTTPS })
 
 
 //                val testingContent = "EE B1 10 00 0B 00 01 48 41 48 41 48 41 FF FC FF FF "
@@ -60,6 +62,7 @@ class StatusCheckerApplication {
 
                 thread { pingService.startup() }
                 thread { telnetService.startup() }
+                thread { httpsService.startup() }
             };
         }
     }
