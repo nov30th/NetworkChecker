@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "im.hoho.smarthome"
-version = "0.0.1-SNAPSHOT"
+//version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {

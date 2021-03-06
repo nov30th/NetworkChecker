@@ -22,9 +22,16 @@ class LocalCache {
     lateinit var mapper: ObjectMapper
 
     fun readLocalCsv(fileName: String) {
-        logger.info("Loading ${File(fileName).absolutePath} CSV file to program...")
+        val path: String
+// 判断 ide 运行还是 jar 运行
+// 判断 ide 运行还是 jar 运行
+        val file = File(this.javaClass.protectionDomain.codeSource.location.path)
+        path = file.path.toString().replace("file:\\", "").replace("statusChecker.jar!\\BOOT-INF\\classes!", "")
+
+        val fileNameLocal = path + fileName
+        logger.info("Loading ${fileNameLocal} CSV file to program...")
         var skipFirstLine = true
-        File(fileName).forEachLine fileloading@{
+        File(fileNameLocal).forEachLine fileloading@{
             if (skipFirstLine) {
                 skipFirstLine = false
                 return@fileloading
