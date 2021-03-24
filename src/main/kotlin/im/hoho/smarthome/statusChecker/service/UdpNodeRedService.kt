@@ -1,21 +1,20 @@
 package im.hoho.smarthome.statusChecker.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import im.hoho.smarthome.statusChecker.model.EnvCacheItem
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import java.io.DataOutputStream
-import java.io.IOException
+import java.net.DatagramPacket
+import java.net.DatagramSocket
 import java.net.InetSocketAddress
-import java.net.Socket
-import java.net.UnknownHostException
 import kotlin.concurrent.thread
 
 
-class Tcp485Service(val ip: String, val port: Int) : ISend {
-    private val logger: Logger = LogManager.getLogger(Tcp485Service::class.java)
-
-    private val socketClient = Socket()
+class UdpNodeRedService(val ip: String, val port: Int) : ISend {
+    private val logger: Logger = LogManager.getLogger(UdpNodeRedService::class.java)
+    val mapper = ObjectMapper()
     private val lcdScreen = 12
+    var socket = DatagramSocket(65533)
 
     private val lcdMessagePrefix = "EEB110${"%04x".format(lcdScreen)}{ID}{Content}FFFCFFFF"
 
@@ -26,10 +25,6 @@ class Tcp485Service(val ip: String, val port: Int) : ISend {
                         .replace("{Content}", "%02x".format(if (isStatusNormal) 1 else 0))
         val finalMessage = convertStringToHexToBytes(messageContent)
         sendMessage(finalMessage)
-    }
-
-    override fun sendButtonStatus(cacheItem: EnvCacheItem) {
-        sendButtonStatus(cacheItem.lcdButton, cacheItem.status == 1)
     }
 
     fun sendText(controlId: Int, textContent: String) {
@@ -45,6 +40,12 @@ class Tcp485Service(val ip: String, val port: Int) : ISend {
         sendMessage(finalBytes)
     }
 
+    override fun sendButtonStatus(cacheItem: EnvCacheItem) {
+        val json = mapper.writeValueAsString(cacheItem)
+        val textContentBytes = json.toByteArray()
+        sendMessage(textContentBytes)
+    }
+
     private fun convertStringToHexToBytes(content: String): ByteArray {
         return content.chunked(2).map {
             ((Character.digit(it[0], 16) shl 4)
@@ -53,7 +54,6 @@ class Tcp485Service(val ip: String, val port: Int) : ISend {
     }
 
     override fun startup() {
-        connectTo485()
         thread { monitorSocket() }
     }
 
@@ -63,43 +63,24 @@ class Tcp485Service(val ip: String, val port: Int) : ISend {
             Thread.sleep(500)
             try {
                 btnStatus = !btnStatus
-                if (!socketClient.isConnected) {
-                    Thread.sleep(5000)
-                    logger.warn("Reconnecting...")
-                    connectTo485()
-                }
                 sendButtonStatus(300, btnStatus)
             } catch (_: Exception) {
-
+                Thread.sleep(10000)
             }
         }
     }
 
     override fun sendMessage(bytes: ByteArray): Boolean {
         try {
-            if (socketClient.isConnected) {
-                val outputStream = DataOutputStream(socketClient.getOutputStream())
-                outputStream.write(bytes)
-                outputStream.flush()
-                return true
-            }
+            val packet = DatagramPacket(bytes, bytes.size, InetSocketAddress(ip, port))
+            socket.send(packet)
+            return true
         } catch (e: Exception) {
             logger.error("error occured when sending message...", e.message)
         }
         return false
     }
 
-    private fun connectTo485() {
-        try {
-            val address = InetSocketAddress(ip, port)
-            socketClient.connect(address, 5000)
-            logger.info("Connected with $ip:$port")
-        } catch (e: UnknownHostException) {
-            logger.error("connecting 485 error during [${ip}]/${port} with UnknownHostException ${e.message}")
-        } catch (e: IOException) {
-            logger.error("connecting 485 error during [${ip}]/${port} with IOException ${e.message}")
-        }
-    }
 }
 
 

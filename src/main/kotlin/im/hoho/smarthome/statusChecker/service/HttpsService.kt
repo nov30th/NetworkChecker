@@ -11,7 +11,7 @@ import java.util.*
 import javax.net.ssl.*
 
 
-class HttpsService(iSend: ISend, type: CheckType, cacheItem: List<EnvCacheItem>) :
+class HttpsService(iSend: List<ISend>, type: CheckType, cacheItem: List<EnvCacheItem>) :
         StatusAbstract(iSend, type, cacheItem) {
 
     private fun createSocketFactory(protocols: List<String>) =
@@ -66,7 +66,7 @@ class HttpsService(iSend: ISend, type: CheckType, cacheItem: List<EnvCacheItem>)
                     it.status = 0
                 }
                 it.lastUpdate = Date().time
-                iSend.sendButtonStatus(it.lcdButton, it.status == 1)
+                iSendList.forEach { iSend -> iSend.sendButtonStatus(it) }
             }
         }
     }

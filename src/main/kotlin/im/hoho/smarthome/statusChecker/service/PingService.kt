@@ -5,7 +5,7 @@ import im.hoho.smarthome.statusChecker.model.EnvCacheItem
 import java.net.InetAddress
 import java.util.*
 
-class PingService(iSend: ISend, type: CheckType, cacheItem: List<EnvCacheItem>) :
+class PingService(iSend: List<ISend>, type: CheckType, cacheItem: List<EnvCacheItem>) :
         StatusAbstract(iSend, type, cacheItem) {
 
     override fun startup() {
@@ -34,7 +34,7 @@ class PingService(iSend: ISend, type: CheckType, cacheItem: List<EnvCacheItem>) 
                     it.status = 0
                 }
                 it.lastUpdate = Date().time
-                iSend.sendButtonStatus(it.lcdButton, it.status == 1)
+                iSendList.forEach { iSend -> iSend.sendButtonStatus(it) }
             }
         }
     }

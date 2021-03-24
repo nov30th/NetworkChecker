@@ -1,5 +1,6 @@
 package im.hoho.smarthome.statusChecker.service
 
+import im.hoho.smarthome.statusChecker.model.EnvCacheItem
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import java.net.DatagramPacket
@@ -8,7 +9,7 @@ import java.net.InetSocketAddress
 import kotlin.concurrent.thread
 
 
-class Udp485Service(val ip: String, val port: Int) :ISend {
+class Udp485Service(val ip: String, val port: Int) : ISend {
     private val logger: Logger = LogManager.getLogger(Udp485Service::class.java)
 
     private val lcdScreen = 12
@@ -23,6 +24,10 @@ class Udp485Service(val ip: String, val port: Int) :ISend {
                         .replace("{Content}", "%02x".format(if (isStatusNormal) 1 else 0))
         val finalMessage = convertStringToHexToBytes(messageContent)
         sendMessage(finalMessage)
+    }
+
+    override fun sendButtonStatus(cacheItem: EnvCacheItem) {
+        sendButtonStatus(cacheItem.lcdButton, cacheItem.status == 1)
     }
 
     fun sendText(controlId: Int, textContent: String) {
@@ -62,7 +67,7 @@ class Udp485Service(val ip: String, val port: Int) :ISend {
         }
     }
 
-     override fun sendMessage(bytes: ByteArray): Boolean {
+    override fun sendMessage(bytes: ByteArray): Boolean {
         try {
             val packet = DatagramPacket(bytes, bytes.size, InetSocketAddress(ip, port))
             socket.send(packet)

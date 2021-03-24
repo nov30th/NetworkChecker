@@ -1,10 +1,7 @@
 package im.hoho.smarthome.statusChecker
 
 import im.hoho.smarthome.statusChecker.model.CheckType
-import im.hoho.smarthome.statusChecker.service.HttpsService
-import im.hoho.smarthome.statusChecker.service.PingService
-import im.hoho.smarthome.statusChecker.service.TelnetService
-import im.hoho.smarthome.statusChecker.service.Udp485Service
+import im.hoho.smarthome.statusChecker.service.*
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
@@ -41,14 +38,18 @@ class StatusCheckerApplication {
             run {
                 logger.info("*********** Https://hoho.im **************");
                 logger.info("Starting...");
-                localCache.readLocalCsv("networkStatus.csv")
+                localCache.readLocalCsv("/networkStatus.csv")
 //                localCache.readLocalCsv("src/main/resources/test.csv")
 //                tcp485Service = Tcp485Service("192.168.123.216",8899)
                 val udp485Service = Udp485Service("192.168.123.216", 9999)
+                val mqttClientService = MqttClientService("192.168.123.165", 1883)
                 udp485Service.startup()
-                pingService = PingService(udp485Service, CheckType.PING, localCache.getCache().filter { it.checkType == CheckType.PING })
-                telnetService = TelnetService(udp485Service, CheckType.TELNET, localCache.getCache().filter { it.checkType == CheckType.TELNET })
-                httpsService = HttpsService(udp485Service, CheckType.HTTPS, localCache.getCache().filter { it.checkType == CheckType.HTTPS })
+                mqttClientService.startup()
+                val networkServices = listOf(udp485Service, mqttClientService)
+
+                pingService = PingService(networkServices, CheckType.PING, localCache.getCache().filter { it.checkType == CheckType.PING })
+                telnetService = TelnetService(networkServices, CheckType.TELNET, localCache.getCache().filter { it.checkType == CheckType.TELNET })
+                httpsService = HttpsService(networkServices, CheckType.HTTPS, localCache.getCache().filter { it.checkType == CheckType.HTTPS })
 
 
 //                val testingContent = "EE B1 10 00 0B 00 01 48 41 48 41 48 41 FF FC FF FF "
