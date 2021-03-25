@@ -14,6 +14,12 @@
 - TELNET
 - PING
 
+## Pushing Message Supports
+- TCP(485)
+- UDP(485)
+- UDP(Binary)
+- MQTT
+
 ## Configuration
 > using CSV as program configuration.
 
@@ -28,7 +34,7 @@
 
 > no additional configuration in HA except the Lovelace(web page)
 
-### This program is terminated
+### once the process been terminated unexcepted
 ![Disconnected](images/status_unavailable.png)
 
 Node-red Content:
