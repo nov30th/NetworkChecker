@@ -10,6 +10,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
+import java.io.File
+import java.io.FileReader
+import java.io.FileWriter
+import java.util.*
 import kotlin.concurrent.thread
 
 @SpringBootApplication
@@ -37,12 +41,31 @@ class StatusCheckerApplication {
         return CommandLineRunner { _ ->
             run {
                 logger.info("*********** Https://hoho.im **************");
-                logger.info("Starting...");
+                logger.info("Starting...")
+                val path: String
+                val file = File(this.javaClass.protectionDomain.codeSource.location.path)
+                path = file.path.toString().replace("file:\\", "").replace("statusChecker.jar!\\BOOT-INF\\classes!", "")
+
+                val properties = Properties()
+                val propertiesFile = "$path/settings.properties";
+                val propFile = File(propertiesFile);
+                if (propFile.exists()) {
+                    val reader = FileReader(propertiesFile)
+                    properties.load(reader)
+                } else {
+                    properties["mqtt-user"] = "mqtt_username";
+                    properties["mqtt-pwd"] = "mqtt_pwd";
+                    val fileWriter = FileWriter(propertiesFile)
+                    properties.store(fileWriter, "save to properties file")
+                }
+
                 localCache.readLocalCsv("/networkStatus.csv")
+
 //                localCache.readLocalCsv("src/main/resources/test.csv")
 //                tcp485Service = Tcp485Service("192.168.123.216",8899)
                 val udp485Service = Udp485Service("192.168.123.216", 9999)
-                val mqttClientService = MqttClientService("192.168.123.165", 1883)
+                val mqttClientService = MqttClientService("192.168.123.165", 1883,
+                        properties["mqtt-user"].toString(), properties["mqtt-pwd"].toString());
                 udp485Service.startup()
                 mqttClientService.startup()
                 val networkServices = listOf(udp485Service, mqttClientService)

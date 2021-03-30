@@ -73,7 +73,7 @@ class Udp485Service(val ip: String, val port: Int) : ISend {
             socket.send(packet)
             return true
         } catch (e: Exception) {
-            logger.error("error occured when sending message...", e.message)
+            logger.error("error occurred when sending message...", e.message)
         }
         return false
     }

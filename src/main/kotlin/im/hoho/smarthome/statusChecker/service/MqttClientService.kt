@@ -14,7 +14,7 @@ import kotlin.concurrent.thread
 /**
  * This MQTT Service is for HA.
  */
-class MqttClientService(val ip: String, val port: Int) : ISend {
+class MqttClientService(val ip: String, val port: Int, val username: String, val password: String) : ISend {
     private val logger: Logger = LogManager.getLogger(MqttClientService::class.java)
     val mapper = ObjectMapper()
     private val lcdScreen = 12
@@ -49,23 +49,27 @@ class MqttClientService(val ip: String, val port: Int) : ISend {
     }
 
     override fun sendButtonStatus(cacheItem: EnvCacheItem) {
-        client.publishWith().topic("homeassistant/sensor/hoho_status_${cacheItem.name.replace(" ", "")}/config")
-                .retain(false)
-                .qos(MqttQos.AT_MOST_ONCE)
-                .payload(
-                        ("{\"name\": \"${cacheItem.name.replace(" ", "")} Status\"," +
-                                " \"state_topic\": \"homeassistant/sensor/hoho_status_${cacheItem.name.replace(" ", "")}/state\"}")
-                                .toByteArray()).send();
-        client.publishWith().topic("homeassistant/sensor/hoho_status_" +
-                "${cacheItem.name.replace(" ", "")}/state")
-                .retain(true)
-                .qos(MqttQos.AT_MOST_ONCE)
-                .payload(if (cacheItem.status == 1) "on".toByteArray() else "off".toByteArray()).send();
+        try {
+            client.publishWith().topic("homeassistant/sensor/hoho_status_${cacheItem.name.replace(" ", "")}/config")
+                    .retain(false)
+                    .qos(MqttQos.AT_MOST_ONCE)
+                    .payload(
+                            ("{\"name\": \"${cacheItem.name.replace(" ", "")} Status\"," +
+                                    " \"state_topic\": \"homeassistant/sensor/hoho_status_${cacheItem.name.replace(" ", "")}/state\"}")
+                                    .toByteArray()).send();
+            client.publishWith().topic("homeassistant/sensor/hoho_status_" +
+                    "${cacheItem.name.replace(" ", "")}/state")
+                    .retain(true)
+                    .qos(MqttQos.AT_MOST_ONCE)
+                    .payload(if (cacheItem.status == 1) "on".toByteArray() else "off".toByteArray()).send();
 //        client.publishWith().topic("homeassistant/sensor/hoho_status_" +
 //                "${cacheItem.name.replace(" ", "")}/topic")
 //                .retain(true)
 //                .qos(MqttQos.AT_MOST_ONCE)
 //                .payload("homeassistant/sensor/hoho_status_${cacheItem.name.replace(" ", "")}/state".toByteArray()).send();
+        } catch (e: Exception) {
+            logger.error("error occurred when sendButtonStatus message...", e.message)
+        }
     }
 
     private fun convertStringToHexToBytes(content: String): ByteArray {
@@ -80,13 +84,15 @@ class MqttClientService(val ip: String, val port: Int) : ISend {
     }
 
     private fun monitorSocket() {
+
+
         while (true) {
             try {
                 if (client.state != MqttClientState.CONNECTED)
                     logger.info("Connecting to MQTT server...")
                 client.connectWith().simpleAuth()
-                        .username("[USERNAME]")
-                        .password("[PASSWORD]".toByteArray())
+                        .username(username)
+                        .password(password.toByteArray())
                         .applySimpleAuth()
                         .willPublish()
                         .topic("homeassistant/sensor/hoho_status_boss/state")
@@ -121,7 +127,7 @@ class MqttClientService(val ip: String, val port: Int) : ISend {
                     .payload("1".toByteArray()).send();
             return true
         } catch (e: Exception) {
-            logger.error("error occured when sending message...", e.message)
+            logger.error("error occurred when sending message...", e.message)
         }
         return false
     }
