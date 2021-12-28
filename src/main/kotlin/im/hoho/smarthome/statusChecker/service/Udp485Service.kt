@@ -6,6 +6,8 @@ import org.apache.logging.log4j.Logger
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetSocketAddress
+import java.text.SimpleDateFormat
+import java.util.*
 import kotlin.concurrent.thread
 
 
@@ -60,6 +62,11 @@ class Udp485Service(val ip: String, val port: Int) : ISend {
             Thread.sleep(500)
             try {
                 btnStatus = !btnStatus
+                if (btnStatus){
+                    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                    val currentDate = sdf.format(Date())
+                    sendText(2,currentDate)
+                }
                 sendButtonStatus(300, btnStatus)
             } catch (_: Exception) {
                 Thread.sleep(10000)

@@ -8,6 +8,8 @@ import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.UnknownHostException
+import java.text.SimpleDateFormat
+import java.util.*
 import kotlin.concurrent.thread
 
 
@@ -67,6 +69,11 @@ class Tcp485Service(val ip: String, val port: Int) : ISend {
                     Thread.sleep(5000)
                     logger.warn("Reconnecting...")
                     connectTo485()
+                }
+                if (btnStatus){
+                    val sdf = SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
+                    val currentDate = sdf.format(Date())
+                    sendText(2,currentDate)
                 }
                 sendButtonStatus(300, btnStatus)
             } catch (_: Exception) {
