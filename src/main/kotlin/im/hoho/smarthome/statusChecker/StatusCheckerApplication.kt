@@ -37,24 +37,24 @@ class StatusCheckerApplication {
     }
 
     @Bean
-    open fun commandLineRunner(ctx: ApplicationContext): CommandLineRunner {
+    fun commandLineRunner(ctx: ApplicationContext): CommandLineRunner {
         return CommandLineRunner { _ ->
             run {
-                logger.info("*********** Https://hoho.im **************");
+                logger.info("*********** Https://hoho.im **************")
                 logger.info("Starting...")
                 val path: String
                 val file = File(this.javaClass.protectionDomain.codeSource.location.path)
                 path = file.path.toString().replace("file:\\", "").replace("statusChecker.jar!\\BOOT-INF\\classes!", "")
 
                 val properties = Properties()
-                val propertiesFile = "$path/settings.properties";
-                val propFile = File(propertiesFile);
+                val propertiesFile = "$path/settings.properties"
+                val propFile = File(propertiesFile)
                 if (propFile.exists()) {
                     val reader = FileReader(propertiesFile)
                     properties.load(reader)
                 } else {
-                    properties["mqtt-user"] = "mqtt_username";
-                    properties["mqtt-pwd"] = "mqtt_pwd";
+                    properties["mqtt-user"] = "mqtt_username"
+                    properties["mqtt-pwd"] = "mqtt_pwd"
                     val fileWriter = FileWriter(propertiesFile)
                     properties.store(fileWriter, "save to properties file")
                 }
@@ -64,15 +64,28 @@ class StatusCheckerApplication {
 //                localCache.readLocalCsv("src/main/resources/test.csv")
 //                tcp485Service = Tcp485Service("192.168.123.216",8899)
                 val udp485Service = Udp485Service("192.168.123.216", 9999)
-                val mqttClientService = MqttClientService("192.168.123.165", 1883,
-                        properties["mqtt-user"].toString(), properties["mqtt-pwd"].toString());
+                val udpNodeRed = Udp485Service("192.168.123.165", 8988)
+                val mqttClientService = MqttClientService(
+                    "192.168.123.165", 1883,
+                    properties["mqtt-user"].toString(), properties["mqtt-pwd"].toString()
+                )
                 udp485Service.startup()
                 mqttClientService.startup()
-                val networkServices = listOf(udp485Service, mqttClientService)
+                udpNodeRed.startup()
+                val networkServices = listOf(udp485Service, mqttClientService, udpNodeRed)
 
-                pingService = PingService(networkServices, CheckType.PING, localCache.getCache().filter { it.checkType == CheckType.PING })
-                telnetService = TelnetService(networkServices, CheckType.TELNET, localCache.getCache().filter { it.checkType == CheckType.TELNET })
-                httpsService = HttpsService(networkServices, CheckType.HTTPS, localCache.getCache().filter { it.checkType == CheckType.HTTPS })
+                pingService = PingService(
+                    networkServices,
+                    CheckType.PING,
+                    localCache.getCache().filter { it.checkType == CheckType.PING })
+                telnetService = TelnetService(
+                    networkServices,
+                    CheckType.TELNET,
+                    localCache.getCache().filter { it.checkType == CheckType.TELNET })
+                httpsService = HttpsService(
+                    networkServices,
+                    CheckType.HTTPS,
+                    localCache.getCache().filter { it.checkType == CheckType.HTTPS })
 
 
 //                val testingContent = "EE B1 10 00 0B 00 01 48 41 48 41 48 41 FF FC FF FF "
@@ -87,7 +100,7 @@ class StatusCheckerApplication {
                 thread { pingService.startup() }
                 thread { telnetService.startup() }
                 thread { httpsService.startup() }
-            };
+            }
         }
     }
 

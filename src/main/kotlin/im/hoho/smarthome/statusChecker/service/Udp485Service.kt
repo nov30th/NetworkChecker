@@ -15,7 +15,7 @@ class Udp485Service(val ip: String, val port: Int) : ISend {
     private val logger: Logger = LogManager.getLogger(Udp485Service::class.java)
 
     private val lcdScreen = 12
-    var socket = DatagramSocket(65534)
+    var socket = DatagramSocket()
 
     private val lcdMessagePrefix = "EEB110${"%04x".format(lcdScreen)}{ID}{Content}FFFCFFFF"
 
