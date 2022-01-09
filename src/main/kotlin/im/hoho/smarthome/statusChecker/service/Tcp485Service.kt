@@ -1,6 +1,8 @@
 package im.hoho.smarthome.statusChecker.service
 
 import im.hoho.smarthome.statusChecker.model.EnvCacheItem
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import java.io.DataOutputStream
@@ -16,16 +18,17 @@ import kotlin.concurrent.thread
 class Tcp485Service(val ip: String, val port: Int) : ISend {
     private val logger: Logger = LogManager.getLogger(Tcp485Service::class.java)
 
-    private val socketClient = Socket()
+    private lateinit var socketClient: Socket
     private val lcdScreen = 12
+    private var lastReconnect: Long = 0
 
     private val lcdMessagePrefix = "EEB110${"%04x".format(lcdScreen)}{ID}{Content}FFFCFFFF"
 
     override fun sendButtonStatus(controlId: Int, isStatusNormal: Boolean) {
         val messageContent =
-                lcdMessagePrefix
-                        .replace("{ID}", "%04x".format(controlId))
-                        .replace("{Content}", "%02x".format(if (isStatusNormal) 1 else 0))
+            lcdMessagePrefix
+                .replace("{ID}", "%04x".format(controlId))
+                .replace("{Content}", "%02x".format(if (isStatusNormal) 1 else 0))
         val finalMessage = convertStringToHexToBytes(messageContent)
         sendMessage(finalMessage)
     }
@@ -36,9 +39,9 @@ class Tcp485Service(val ip: String, val port: Int) : ISend {
 
     fun sendText(controlId: Int, textContent: String) {
         val messageContent =
-                lcdMessagePrefix
-                        .replace("{ID}", "%04x".format(controlId))
-                        .replace("{Content}", ",")
+            lcdMessagePrefix
+                .replace("{ID}", "%04x".format(controlId))
+                .replace("{Content}", ",")
         val prefixBytes = messageContent.split(",")
         val textContentBytes = textContent.toByteArray()
         val finalBytes = convertStringToHexToBytes(prefixBytes[0]) +
@@ -70,10 +73,10 @@ class Tcp485Service(val ip: String, val port: Int) : ISend {
                     logger.warn("Reconnecting...")
                     connectTo485()
                 }
-                if (btnStatus){
+                if (btnStatus) {
                     val sdf = SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
                     val currentDate = sdf.format(Date())
-                    sendText(2,currentDate)
+                    sendText(2, currentDate)
                 }
                 sendButtonStatus(300, btnStatus)
             } catch (_: Exception) {
@@ -92,13 +95,26 @@ class Tcp485Service(val ip: String, val port: Int) : ISend {
             }
         } catch (e: Exception) {
             logger.error("error occured when sending message...", e.message)
+            if (lastReconnect + 5 * 1000 > System.currentTimeMillis())
+                return false
+            lastReconnect = System.currentTimeMillis()
+            GlobalScope.launch {
+                logger.info("connectTo485...")
+                Thread.sleep(1000)
+                connectTo485()
+            }
         }
         return false
+    }
+
+    fun reconnectStart() {
+
     }
 
     private fun connectTo485() {
         try {
             val address = InetSocketAddress(ip, port)
+            socketClient = Socket()
             socketClient.connect(address, 5000)
             logger.info("Connected with $ip:$port")
         } catch (e: UnknownHostException) {
