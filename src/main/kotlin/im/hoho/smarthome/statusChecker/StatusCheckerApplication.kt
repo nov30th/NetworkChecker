@@ -63,16 +63,16 @@ class StatusCheckerApplication {
 
 //                localCache.readLocalCsv("src/main/resources/test.csv")
 //                tcp485Service = Tcp485Service("192.168.123.216",8899)
-                val udp485Service = Udp485Service("192.168.123.216", 9999)
-                val udpNodeRed = Udp485Service("192.168.123.165", 8988)
+                val tcp485Service = Tcp485Service("192.168.123.165", 9999)
+//                val udpNodeRed = Udp485Service("192.168.123.165", 8988)
                 val mqttClientService = MqttClientService(
                     "192.168.123.165", 1883,
                     properties["mqtt-user"].toString(), properties["mqtt-pwd"].toString()
                 )
-                udp485Service.startup()
+                tcp485Service.startup()
                 mqttClientService.startup()
-                udpNodeRed.startup()
-                val networkServices = listOf(udp485Service, mqttClientService, udpNodeRed)
+//                udpNodeRed.startup()
+                val networkServices = listOf(tcp485Service, mqttClientService)
 
                 pingService = PingService(
                     networkServices,
