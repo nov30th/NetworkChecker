@@ -74,7 +74,7 @@ class Tcp485Service(val ip: String, val port: Int) : ISend {
                     connectTo485()
                 }
                 if (btnStatus) {
-                    val sdf = SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
+                    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
                     val currentDate = sdf.format(Date())
                     sendText(2, currentDate)
                 }
