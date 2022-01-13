@@ -24,6 +24,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
     implementation("com.hivemq:hivemq-mqtt-client:1.2.1")
 
+    implementation("io.ktor:ktor-network:1.6.7")
+//    implementation("io.ktor:ktor-server-netty:1.6.7")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
     }

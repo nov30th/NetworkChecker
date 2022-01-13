@@ -61,9 +61,12 @@ class StatusCheckerApplication {
 
                 localCache.readLocalCsv("/networkStatus.csv")
 
+                val tcpBus = TcpBroker()
+                thread { tcpBus.startTcpBus(9999) }
+
 //                localCache.readLocalCsv("src/main/resources/test.csv")
 //                tcp485Service = Tcp485Service("192.168.123.216",8899)
-                val tcp485Service = Tcp485Service("192.168.123.165", 9999)
+                val tcp485Service = Tcp485Service("127.0.0.1", 9999)
 //                val udpNodeRed = Udp485Service("192.168.123.165", 8988)
                 val mqttClientService = MqttClientService(
                     "192.168.123.165", 1883,
