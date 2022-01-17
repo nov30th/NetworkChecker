@@ -15,6 +15,7 @@ import java.io.FileReader
 import java.io.FileWriter
 import java.util.*
 import kotlin.concurrent.thread
+import kotlin.system.exitProcess
 
 @SpringBootApplication
 class StatusCheckerApplication {
@@ -27,7 +28,7 @@ class StatusCheckerApplication {
     lateinit var pingService: PingService
     lateinit var telnetService: TelnetService
     lateinit var httpsService: HttpsService
-
+    val threads = mutableListOf<Thread>()
 
     companion object {
         @JvmStatic
@@ -40,14 +41,16 @@ class StatusCheckerApplication {
     fun commandLineRunner(ctx: ApplicationContext): CommandLineRunner {
         return CommandLineRunner { _ ->
             run {
+                val userDir = System.getProperty("user.dir")
+                logger.info(userDir)
                 logger.info("*********** Https://hoho.im **************")
                 logger.info("Starting...")
-                val path: String
-                val file = File(this.javaClass.protectionDomain.codeSource.location.path)
-                path = file.path.toString().replace("file:\\", "").replace("statusChecker.jar!\\BOOT-INF\\classes!", "")
+//                val path: String
+//                val file = File(this.javaClass.protectionDomain.codeSource.location.path)
+//                path = file.path.toString().replace("file:\\", "").replace("statusChecker.jar!\\BOOT-INF\\classes!", "")
 
                 val properties = Properties()
-                val propertiesFile = "$path/settings.properties"
+                val propertiesFile = System.getProperty("user.dir") + "\\settings.properties"
                 val propFile = File(propertiesFile)
                 if (propFile.exists()) {
                     val reader = FileReader(propertiesFile)
@@ -59,23 +62,48 @@ class StatusCheckerApplication {
                     properties.store(fileWriter, "save to properties file")
                 }
 
-                localCache.readLocalCsv("/networkStatus.csv")
+                val services: List<String>?
+                val networkServices = mutableListOf<ISend>()
+                val servers = File(System.getProperty("user.dir") + "\\services.txt")
+                if (servers.exists()) {
+                    services = servers.readLines()
+                } else {
+                    logger.warn("Empty services file, please edit the services.txt and restart.")
+                    servers.writeText(
+                        listOf<String>(
+                            "TcpBroker,0.0.0.0,9999",
+                            "Tcp485Service,127.0.0.1,9999",
+                            "MqttClientService,192.168.123.165,1883"
+                        ).joinToString(System.getProperty("line.separator")),
+                    )
+                    exitProcess(-2)
+                }
 
-                val tcpBus = TcpBroker()
-                thread { tcpBus.startTcpBus(9999) }
+                localCache.readLocalCsv(System.getProperty("user.dir") + "\\networkStatus.csv")
 
-//                localCache.readLocalCsv("src/main/resources/test.csv")
-//                tcp485Service = Tcp485Service("192.168.123.216",8899)
-                val tcp485Service = Tcp485Service("127.0.0.1", 9999)
-//                val udpNodeRed = Udp485Service("192.168.123.165", 8988)
-                val mqttClientService = MqttClientService(
-                    "192.168.123.165", 1883,
-                    properties["mqtt-user"].toString(), properties["mqtt-pwd"].toString()
-                )
-                tcp485Service.startup()
-                mqttClientService.startup()
-//                udpNodeRed.startup()
-                val networkServices = listOf(tcp485Service, mqttClientService)
+                for (serviceDesc: String in services) {
+                    val args = serviceDesc.split(",")
+                    val ip = args[1]
+                    val port = args[2].toInt()
+                    when (args[0]) {
+                        "TcpBroker" -> {
+                            val service = TcpBroker(ip, port)
+                            thread { service.startup() }
+                        }
+                        "Tcp485Service" -> {
+                            val service = Tcp485Service(ip, port)
+                            networkServices.add(service)
+                            thread { service.startup() }
+                        }
+                        "MqttClientService" -> {
+                            val service = MqttClientService(
+                                ip, port, properties["mqtt-user"].toString(), properties["mqtt-pwd"].toString()
+                            )
+                            networkServices.add(service)
+                            thread { service.startup() }
+                        }
+                    }
+                }
 
                 pingService = PingService(
                     networkServices,
@@ -90,15 +118,6 @@ class StatusCheckerApplication {
                     CheckType.HTTPS,
                     localCache.getCache().filter { it.checkType == CheckType.HTTPS })
 
-
-//                val testingContent = "EE B1 10 00 0B 00 01 48 41 48 41 48 41 FF FC FF FF "
-//                        .replace(" ","")
-//                val testingBytes = tcp485Service.convertStringToHexToBytes(testingContent)
-//                tcp485Service.sendMessage(testingBytes)
-//                tcp485Service.sendButtonStatus(201,true)
-//                tcp485Service.sendButtonStatus(204,true)
-//                tcp485Service.sendButtonStatus(207,true)
-//                tcp485Service.sendText(101,"FF127599")
 
                 thread { pingService.startup() }
                 thread { telnetService.startup() }

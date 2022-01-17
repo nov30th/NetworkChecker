@@ -8,19 +8,26 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import java.io.File
 import java.net.InetSocketAddress
+import java.nio.charset.Charset
 
-class TcpBroker {
+class TcpBroker(private val ip: String, private val port: Int) {
     private val outputs = mutableListOf<ByteWriteChannel>()
     private val logger: Logger = LogManager.getLogger(MqttClientService::class.java)
-    private val whiteList = listOf<String>("192.168.123.165", "127.0.0.1", "localhost")
+    private var whiteList = listOf<String>("192.168.123.165", "127.0.0.1", "localhost")
     private val controlByte = 0xEE
     private val allowedBegin = arrayListOf(0xEE.toByte(), 0xCE.toByte())
 
-    fun startTcpBus(port: Int) {
+
+    fun startup() {
+
+
+        prepareConfiguration()
+
         runBlocking {
             val server = aSocket(ActorSelectorManager(Dispatchers.IO))
-                    .tcp().bind(InetSocketAddress("0.0.0.0", port))
+                .tcp().bind(InetSocketAddress(ip, port))
             println("Started TCP BUS Server At ${server.localAddress}")
 
             while (true) {
@@ -68,5 +75,13 @@ class TcpBroker {
                 }
             }
         }
+    }
+
+    private fun prepareConfiguration() {
+        val file = File(System.getProperty("user.dir") + "\\whiteListIp.txt")
+        if (file.exists())
+            whiteList = file.readLines(Charset.defaultCharset())
+        else
+            file.writeText(whiteList.joinToString(System.getProperty("line.separator")))
     }
 }
