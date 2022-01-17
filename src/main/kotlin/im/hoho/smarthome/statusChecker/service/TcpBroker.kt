@@ -2,7 +2,6 @@ package im.hoho.smarthome.statusChecker.service
 
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
-import io.ktor.util.network.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -14,13 +13,14 @@ import java.net.InetSocketAddress
 class TcpBroker {
     private val outputs = mutableListOf<ByteWriteChannel>()
     private val logger: Logger = LogManager.getLogger(MqttClientService::class.java)
-    private val whiteList = listOf<String>("192.168.123.165","127.0.0.1")
+    private val whiteList = listOf<String>("192.168.123.165", "127.0.0.1", "localhost")
     private val controlByte = 0xEE
+    private val allowedBegin = arrayListOf(0xEE.toByte(), 0xCE.toByte())
 
     fun startTcpBus(port: Int) {
         runBlocking {
             val server = aSocket(ActorSelectorManager(Dispatchers.IO))
-                .tcp().bind(InetSocketAddress("0.0.0.0", port))
+                    .tcp().bind(InetSocketAddress("0.0.0.0", port))
             println("Started TCP BUS Server At ${server.localAddress}")
 
             while (true) {
@@ -37,16 +37,23 @@ class TcpBroker {
 
                     try {
                         while (true) {
-                            val data = ByteArray(1000)
+                            val data = ByteArray(65535)
                             val dataRead = input.readAvailable(data)
                             if (dataRead < 0) {
                                 outputs.remove(output)
                                 break
                             }
+                            if (dataRead < 1) {
+                                continue
+                            }
                             if (data[0] == controlByte.toByte()) {
                                 if (!allowControlPacket)
                                     continue
                             }
+                            if (data[0] !in allowedBegin) {
+                                continue
+                            }
+
 //                            logger.info("dataread:$dataRead")
                             for (clientOutput in outputs.toList()) {
                                 if (clientOutput != output) {
